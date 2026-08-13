@@ -1,0 +1,13 @@
+{
+  "name": "agente-impressao",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node agente.mjs",
+    "listar": "node agente.mjs --listar"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.98.0"
+  }
+}

@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* ── Brand raw tokens ─────────────────────────────────────────── */
+/* Copiados verbatim de fichas-tecnicas/web/src/app/globals.css —
+   ver design-tokens-santofavo.md na raiz do repo. */
+:root {
+  --brand-yellow:          #FFCC1C;
+  --brand-marrom-escuro:   #72381C;
+  --brand-marrom:          #8C4820;
+  --brand-rosa:            #FF4D79;
+  --brand-verde:           #96CC70;
+  --brand-roxo:            #A890CC;
+
+  /* Semantic — light */
+  --bg:        #F8F1E0;
+  --bg-soft:   #F2E9D2;
+  --bg-card:   #FBF6E9;
+  --bg-hover:  rgba(114, 56, 28, 0.06);
+
+  --ink:        #72381C;
+  --ink-soft:   #8C4820;
+  --ink-muted:  #A88560;
+
+  --rule:       rgba(114, 56, 28, 0.5);
+  --rule-soft:  rgba(114, 56, 28, 0.15);
+  --dot:        #B0905F;
+
+  --accent:     #FFCC1C;
+}
+
+[data-theme="dark"] {
+  --bg:        #1A130B;
+  --bg-soft:   #221A10;
+  --bg-card:   #251C12;
+  --bg-hover:  rgba(242, 226, 194, 0.06);
+
+  --ink:        #F2E2C2;
+  --ink-soft:   #D8BE91;
+  --ink-muted:  #8A745B;
+
+  --rule:       rgba(216, 190, 145, 0.4);
+  --rule-soft:  rgba(216, 190, 145, 0.15);
+  --dot:        #6B4D2A;
+
+  --accent:     #FFCC1C;
+}
+
+/* ── Tailwind v4 theme mapping ───────────────────────────────── */
+@theme inline {
+  /* Colors */
+  --color-bg:                  var(--bg);
+  --color-bg-soft:             var(--bg-soft);
+  --color-bg-card:             var(--bg-card);
+  --color-bg-hover:            var(--bg-hover);
+  --color-ink:                 var(--ink);
+  --color-ink-soft:            var(--ink-soft);
+  --color-ink-muted:           var(--ink-muted);
+  --color-rule:                var(--rule);
+  --color-rule-soft:           var(--rule-soft);
+  --color-dot:                 var(--dot);
+  --color-accent:              var(--accent);
+  --color-brand-yellow:        #FFCC1C;
+  --color-brand-marrom-escuro: #72381C;
+  --color-brand-marrom:        #8C4820;
+  --color-brand-rosa:          #FF4D79;
+  --color-brand-verde:         #96CC70;
+  --color-brand-roxo:          #A890CC;
+
+  /* Fonts — variables set by next/font on <body> */
+  --font-serif: var(--font-newsreader), Georgia, serif;
+  --font-sans:  var(--font-dm-sans), system-ui, -apple-system, sans-serif;
+
+  /* Font sizes */
+  --text-xs:   0.7rem;
+  --text-sm:   0.82rem;
+  --text-base: 0.98rem;
+  --text-md:   1.05rem;
+  --text-lg:   1.2rem;
+  --text-xl:   1.5rem;
+  --text-2xl:  2.1rem;
+
+  /* Border radius */
+  --radius-sm:   3px;
+  --radius-md:   4px;
+  --radius-lg:   6px;
+  --radius-pill: 100px;
+
+  /* Letter spacing */
+  --tracking-wider:  0.1em;
+  --tracking-widest: 0.18em;
+  --tracking-ultra:  0.22em;
+}
+
+/* ── Base ────────────────────────────────────────────────────── */
+body {
+  background-color: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Alvos de toque grandes o suficiente para operação de cozinha
+   (mãos ocupadas, tablet) — reforça o mínimo de 44px recomendado. */
+button, [role="button"] {
+  touch-action: manipulation;
+}
