@@ -3,6 +3,11 @@
  * prazo padrão (em dias) para cada modo em que pode ser guardado. Na
  * impressão o operador escolhe o modo e a validade sai daqui — podendo
  * ajustar a data manualmente na UI quando o caso foge do padrão.
+ *
+ * "Aberto" é um evento ortogonal à conservação: uma embalagem já guardada
+ * (ambiente/refrigerado/congelado) que foi aberta hoje passa a ter um
+ * prazo próprio (`dias_apos_abertura`), o mesmo não importa o modo em que
+ * estava guardada.
  */
 
 export type ModoConservacao = "ambiente" | "refrigerado" | "congelado";
@@ -14,10 +19,18 @@ export const MODO_LABEL: Record<ModoConservacao, string> = {
   congelado: "Congelado -18 °C",
 };
 
+/** Rótulo do tipo de data impresso na etiqueta — muda conforme o evento. */
+export const TIPO_EVENTO_LABEL = {
+  manipulacao: "Manipulação",
+  abertura: "Abertura",
+} as const;
+export type TipoEvento = keyof typeof TIPO_EVENTO_LABEL;
+
 export type PrazosConservacao = {
   dias_ambiente: number | null;
   dias_refrigerado: number | null;
   dias_congelado: number | null;
+  dias_apos_abertura: number | null;
 };
 
 export class ValidadeError extends Error {}
@@ -61,21 +74,29 @@ export function modosDisponiveis(prazos: PrazosConservacao): ModoConservacao[] {
   );
 }
 
+/** Se o item tem prazo configurado para "aberto" — só então a UI oferece
+ * o alternador de embalagem aberta. */
+export function temPrazoAbertura(prazos: PrazosConservacao): boolean {
+  return prazos.dias_apos_abertura != null;
+}
+
 /**
- * data_validade = data_base + dias_<modo>. Lança erro se o item não tem
- * prazo para o modo pedido — a UI só oferece modos válidos, então chegar
- * aqui com modo inválido é bug do chamador, não estado recuperável.
+ * data_validade = data_base + dias_<modo>, ou + dias_apos_abertura quando
+ * `aberto` é true (o modo continua informando a conservação impressa na
+ * etiqueta, só não é usado pra calcular o prazo nesse caso). Lança erro se
+ * o item não tem o prazo pedido — a UI só oferece opções válidas, então
+ * chegar aqui com prazo ausente é bug do chamador, não estado recuperável.
  */
 export function calcularValidade(
   modo: ModoConservacao,
   dataBase: Date,
-  prazos: PrazosConservacao
+  prazos: PrazosConservacao,
+  aberto: boolean = false
 ): Date {
-  const dias = prazos[DIAS_POR_MODO[modo]];
+  const dias = aberto ? prazos.dias_apos_abertura : prazos[DIAS_POR_MODO[modo]];
   if (dias == null) {
-    throw new ValidadeError(
-      `Item não tem prazo configurado para o modo "${modo}" (${DIAS_POR_MODO[modo]} vazio).`
-    );
+    const campo = aberto ? "dias_apos_abertura" : DIAS_POR_MODO[modo];
+    throw new ValidadeError(`Item não tem prazo configurado (${campo} vazio).`);
   }
   return somarDiasUTC(dataBase, dias);
 }

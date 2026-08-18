@@ -80,7 +80,9 @@ export function ValidadesScreen({ etiquetasIniciais, responsaveis }: ValidadesSc
           <p className="text-base text-ink text-center">
             Quem está dando baixa em{" "}
             <span className="font-medium">
-              {baixaPendente.etiqueta.products?.name ?? baixaPendente.etiqueta.recipes?.title}
+              {baixaPendente.etiqueta.products?.name ??
+                baixaPendente.etiqueta.recipes?.title ??
+                baixaPendente.etiqueta.nome_livre}
             </span>{" "}
             como <span className="font-medium">{baixaPendente.status === "consumida" ? "consumido" : "descartado"}</span>?
           </p>

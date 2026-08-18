@@ -34,6 +34,7 @@ export type Database = {
           id: string
           impressa_em: string | null
           loja_id: string | null
+          nome_livre: string | null
           produto_id: string | null
           recipe_id: string | null
           responsavel_id: string | null
@@ -50,6 +51,7 @@ export type Database = {
           id?: string
           impressa_em?: string | null
           loja_id?: string | null
+          nome_livre?: string | null
           produto_id?: string | null
           recipe_id?: string | null
           responsavel_id?: string | null
@@ -66,6 +68,7 @@ export type Database = {
           id?: string
           impressa_em?: string | null
           loja_id?: string | null
+          nome_livre?: string | null
           produto_id?: string | null
           recipe_id?: string | null
           responsavel_id?: string | null
@@ -167,6 +170,7 @@ export type Database = {
           code: number | null
           current_stock: number | null
           dias_ambiente: number | null
+          dias_apos_abertura: number | null
           dias_congelado: number | null
           dias_refrigerado: number | null
           id: string
@@ -185,6 +189,7 @@ export type Database = {
           code?: number | null
           current_stock?: number | null
           dias_ambiente?: number | null
+          dias_apos_abertura?: number | null
           dias_congelado?: number | null
           dias_refrigerado?: number | null
           id?: string
@@ -203,6 +208,7 @@ export type Database = {
           code?: number | null
           current_stock?: number | null
           dias_ambiente?: number | null
+          dias_apos_abertura?: number | null
           dias_congelado?: number | null
           dias_refrigerado?: number | null
           id?: string
@@ -223,6 +229,7 @@ export type Database = {
           created_by: string
           description: string | null
           dias_ambiente: number | null
+          dias_apos_abertura: number | null
           dias_congelado: number | null
           dias_refrigerado: number | null
           general_notes: string | null
@@ -244,6 +251,7 @@ export type Database = {
           created_by: string
           description?: string | null
           dias_ambiente?: number | null
+          dias_apos_abertura?: number | null
           dias_congelado?: number | null
           dias_refrigerado?: number | null
           general_notes?: string | null
@@ -265,6 +273,7 @@ export type Database = {
           created_by?: string
           description?: string | null
           dias_ambiente?: number | null
+          dias_apos_abertura?: number | null
           dias_congelado?: number | null
           dias_refrigerado?: number | null
           general_notes?: string | null

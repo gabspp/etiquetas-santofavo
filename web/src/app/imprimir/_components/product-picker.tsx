@@ -13,9 +13,10 @@ const GRUPO_SEM_NOME = "Outros";
 type ProductPickerProps = {
   itens: ItemCatalogo[];
   onSelecionar: (item: ItemCatalogo) => void;
+  onItemLivre: () => void;
 };
 
-export function ProductPicker({ itens, onSelecionar }: ProductPickerProps) {
+export function ProductPicker({ itens, onSelecionar, onItemLivre }: ProductPickerProps) {
   const [busca, setBusca] = useState("");
 
   const grupos = useMemo(() => {
@@ -43,6 +44,14 @@ export function ProductPicker({ itens, onSelecionar }: ProductPickerProps) {
         placeholder="Buscar insumo ou receita..."
         className="w-full rounded-lg border border-rule-soft bg-bg-card px-4 py-3.5 text-base text-ink placeholder:text-ink-muted focus:outline-none focus:border-ink transition-colors"
       />
+
+      <button
+        type="button"
+        onClick={onItemLivre}
+        className="w-full min-h-[52px] rounded-lg border border-dashed border-rule px-4 py-3 text-left text-sm font-medium text-ink-soft transition-[transform,border-color] hover:border-ink focus-visible:outline-2 focus-visible:outline-ink focus-visible:outline-offset-2 active:scale-[0.98]"
+      >
+        + Item livre — não está no catálogo
+      </button>
 
       {grupos.map(([grupo, lista]) => (
         <section key={grupo}>

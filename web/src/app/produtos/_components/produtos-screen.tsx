@@ -47,6 +47,7 @@ export function ProdutosScreen({ itensIniciais, responsaveisIniciais, filaInicia
     dias_ambiente: number | null;
     dias_refrigerado: number | null;
     dias_congelado: number | null;
+    dias_apos_abertura: number | null;
   }) {
     if (!selecionado) return;
     await atualizarValidade({ origem: selecionado.origem, id: selecionado.id, ...dados });

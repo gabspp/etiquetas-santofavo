@@ -38,7 +38,10 @@ export function LabelPreview({ snapshot }: LabelPreviewProps) {
         <div className="border-t-2 border-[#111] mt-auto" style={{ marginTop: "0.4rem" }} />
         <div className="flex-1 flex flex-col justify-evenly">
           <Linha rotulo="CONSERVAÇÃO" valor={snapshot.conservacao} />
-          <Linha rotulo="MANIPULAÇÃO" valor={formatarDataBR(snapshot.dataManipulacao)} />
+          <Linha
+            rotulo={snapshot.tipoEvento.toUpperCase()}
+            valor={formatarDataBR(snapshot.dataEvento)}
+          />
           <Linha rotulo="RESPONSÁVEL" valor={snapshot.responsavelNome || "—"} />
         </div>
       </div>

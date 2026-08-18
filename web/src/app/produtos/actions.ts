@@ -22,6 +22,7 @@ export type AtualizarValidadeInput = {
   dias_ambiente: number | null;
   dias_refrigerado: number | null;
   dias_congelado: number | null;
+  dias_apos_abertura: number | null;
 };
 
 /**
@@ -37,6 +38,7 @@ export async function atualizarValidade(input: AtualizarValidadeInput): Promise<
     dias_ambiente: input.dias_ambiente,
     dias_refrigerado: input.dias_refrigerado,
     dias_congelado: input.dias_congelado,
+    dias_apos_abertura: input.dias_apos_abertura,
   };
 
   const tabela = input.origem === "product" ? "products" : "recipes";

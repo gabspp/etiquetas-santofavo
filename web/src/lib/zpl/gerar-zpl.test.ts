@@ -4,8 +4,9 @@ import { gerarZPL, type EtiquetaSnapshot } from "./gerar-zpl";
 const base: EtiquetaSnapshot = {
   produtoNome: "Ganache de Chocolate",
   conservacao: "Refrigerado 0–4 °C",
+  tipoEvento: "Manipulação",
   lojaCodigo: "26",
-  dataManipulacao: "2026-03-05",
+  dataEvento: "2026-03-05",
   dataValidade: "2026-03-12",
   responsavelNome: "Maria",
 };
@@ -27,10 +28,23 @@ describe("gerarZPL", () => {
     const snapshot: EtiquetaSnapshot = {
       ...base,
       conservacao: "Congelado -18 °C",
-      dataManipulacao: "2026-12-28",
+      dataEvento: "2026-12-28",
       dataValidade: "2027-03-28",
     };
     expect(gerarZPL(snapshot)).toMatchSnapshot();
+  });
+
+  it("gera o ZPL de abertura, com rótulo ABERTURA em vez de MANIPULAÇÃO", () => {
+    const snapshot: EtiquetaSnapshot = {
+      ...base,
+      tipoEvento: "Abertura",
+      dataEvento: "2026-08-14",
+      dataValidade: "2026-08-19",
+    };
+    const zpl = gerarZPL(snapshot);
+    expect(zpl).toContain("ABERTURA");
+    expect(zpl).not.toContain("MANIPULAÇÃO");
+    expect(zpl).toMatchSnapshot();
   });
 
   it("sempre abre com ^XA^SZ2 e fecha com um único ^XZ final", () => {

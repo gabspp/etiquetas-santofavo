@@ -3,6 +3,8 @@
 // Formulário de prazos por modo de conservação: para cada modo em que o
 // item pode ser guardado, quantos dias ele dura. Campo vazio = o item não
 // pode ser guardado daquele jeito (o modo não aparece na tela Imprimir).
+// "Depois de aberto" é um prazo à parte — não depende do modo, e liga o
+// alternador "Embalagem aberta" na tela Imprimir.
 
 import { useState } from "react";
 import { MODO_LABEL, type ModoConservacao } from "@/lib/validade/calcular-validade";
@@ -12,6 +14,7 @@ type Prazos = {
   dias_ambiente: number | null;
   dias_refrigerado: number | null;
   dias_congelado: number | null;
+  dias_apos_abertura: number | null;
 };
 
 type ValidadeFormProps = {
@@ -20,7 +23,7 @@ type ValidadeFormProps = {
   onFechar: () => void;
 };
 
-const CAMPOS: { modo: ModoConservacao; chave: keyof Prazos }[] = [
+const CAMPOS: { modo: ModoConservacao; chave: keyof Omit<Prazos, "dias_apos_abertura"> }[] = [
   { modo: "ambiente", chave: "dias_ambiente" },
   { modo: "refrigerado", chave: "dias_refrigerado" },
   { modo: "congelado", chave: "dias_congelado" },
@@ -32,17 +35,26 @@ function paraNumeroOuNull(texto: string): number | null {
   return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null;
 }
 
+const campoInputCls =
+  "w-20 rounded-md border border-rule-soft bg-bg-card px-2.5 py-2 text-base text-ink text-center tabular-nums focus:outline-none focus:border-ink";
+
 export function ValidadeForm({ item, onSalvar, onFechar }: ValidadeFormProps) {
   const [valores, setValores] = useState<Record<keyof Prazos, string>>({
     dias_ambiente: item.dias_ambiente?.toString() ?? "",
     dias_refrigerado: item.dias_refrigerado?.toString() ?? "",
     dias_congelado: item.dias_congelado?.toString() ?? "",
+    dias_apos_abertura: item.dias_apos_abertura?.toString() ?? "",
   });
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [salvo, setSalvo] = useState(false);
 
   const nenhumPrazo = CAMPOS.every(({ chave }) => valores[chave].trim() === "");
+
+  function setCampo(chave: keyof Prazos, valor: string) {
+    setValores((v) => ({ ...v, [chave]: valor }));
+    setSalvo(false);
+  }
 
   async function handleSalvar() {
     setSalvando(true);
@@ -53,6 +65,7 @@ export function ValidadeForm({ item, onSalvar, onFechar }: ValidadeFormProps) {
         dias_ambiente: paraNumeroOuNull(valores.dias_ambiente),
         dias_refrigerado: paraNumeroOuNull(valores.dias_refrigerado),
         dias_congelado: paraNumeroOuNull(valores.dias_congelado),
+        dias_apos_abertura: paraNumeroOuNull(valores.dias_apos_abertura),
       });
       setSalvo(true);
     } catch (err) {
@@ -93,12 +106,9 @@ export function ValidadeForm({ item, onSalvar, onFechar }: ValidadeFormProps) {
                 inputMode="numeric"
                 min={0}
                 value={valores[chave]}
-                onChange={(e) => {
-                  setValores((v) => ({ ...v, [chave]: e.target.value }));
-                  setSalvo(false);
-                }}
+                onChange={(e) => setCampo(chave, e.target.value)}
                 placeholder="—"
-                className="w-20 rounded-md border border-rule-soft bg-bg-card px-2.5 py-2 text-base text-ink text-center tabular-nums focus:outline-none focus:border-ink"
+                className={campoInputCls}
               />
               <span className="text-xs text-ink-muted">dias</span>
             </span>
@@ -106,9 +116,31 @@ export function ValidadeForm({ item, onSalvar, onFechar }: ValidadeFormProps) {
         ))}
       </div>
 
+      <div>
+        <p className="text-xs uppercase tracking-widest text-ink-muted mb-2">
+          Depois de aberto
+        </p>
+        <label className="flex items-center justify-between gap-3 rounded-md border border-rule-soft bg-bg px-3.5 py-2.5">
+          <span className="text-sm text-ink">Independente de como está guardado</span>
+          <span className="flex items-baseline gap-1.5 shrink-0">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              value={valores.dias_apos_abertura}
+              onChange={(e) => setCampo("dias_apos_abertura", e.target.value)}
+              placeholder="—"
+              className={campoInputCls}
+            />
+            <span className="text-xs text-ink-muted">dias</span>
+          </span>
+        </label>
+      </div>
+
       {nenhumPrazo && (
         <p className="text-xs text-ink-muted">
-          Sem nenhum prazo preenchido, este item não aparece na tela Imprimir.
+          Sem nenhum prazo de conservação preenchido, este item não aparece na tela Imprimir
+          (mesmo com prazo de abertura configurado).
         </p>
       )}
       {erro && <p className="text-sm text-brand-rosa">{erro}</p>}

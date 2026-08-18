@@ -28,7 +28,8 @@ type EtiquetaItemProps = {
 export function EtiquetaItem({ etiqueta, onConsumir, onDescartar, processando }: EtiquetaItemProps) {
   const diff = diasAteVencer(etiqueta.data_validade);
   const urgencia = classificarUrgencia(diff);
-  const nomeProduto = etiqueta.products?.name ?? etiqueta.recipes?.title ?? "Produto removido";
+  const nomeProduto =
+    etiqueta.products?.name ?? etiqueta.recipes?.title ?? etiqueta.nome_livre ?? "Produto removido";
 
   const btn =
     "flex-1 sm:flex-none rounded-md border border-rule-soft bg-bg px-3.5 py-2.5 text-sm font-medium text-ink transition-[transform,border-color] hover:border-ink focus-visible:outline-2 focus-visible:outline-ink focus-visible:outline-offset-2 active:scale-[0.97] disabled:opacity-40";

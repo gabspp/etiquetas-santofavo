@@ -8,9 +8,12 @@ export type EtiquetaSnapshot = {
   produtoNome: string;
   /** Texto do modo de conservação como sai impresso (MODO_LABEL). */
   conservacao: string;
+  /** Rótulo do evento que a data abaixo representa — "Manipulação" ou
+   * "Abertura" (TIPO_EVENTO_LABEL). */
+  tipoEvento: string;
   lojaCodigo: string;
-  /** ISO 'YYYY-MM-DD' — data em que o item foi manipulado/etiquetado. */
-  dataManipulacao: string;
+  /** ISO 'YYYY-MM-DD' — data do evento (manipulação ou abertura). */
+  dataEvento: string;
   /** ISO 'YYYY-MM-DD' */
   dataValidade: string;
   responsavelNome: string;
@@ -70,7 +73,8 @@ export function gerarZPL(snapshot: EtiquetaSnapshot, copias: number = 1): string
   const conservacao = zplEscape(snapshot.conservacao);
   const responsavel = zplEscape(snapshot.responsavelNome);
   const lojaHeader = zplEscape(`SANTO FAVO ${snapshot.lojaCodigo}`);
-  const manipulacaoFmt = formatarDataBR(snapshot.dataManipulacao);
+  const rotuloEvento = zplEscape(snapshot.tipoEvento.toUpperCase());
+  const dataEventoFmt = formatarDataBR(snapshot.dataEvento);
   const { diaMes, ano } = splitDataValidade(snapshot.dataValidade);
 
   const linhas = [
@@ -89,7 +93,7 @@ export function gerarZPL(snapshot: EtiquetaSnapshot, copias: number = 1): string
 
     // Três linhas rótulo/valor distribuídas até a base da etiqueta
     ...linhaRotuloValor(138, "CONSERVAÇÃO", conservacao),
-    ...linhaRotuloValor(198, "MANIPULAÇÃO", manipulacaoFmt),
+    ...linhaRotuloValor(198, rotuloEvento, dataEventoFmt),
     ...linhaRotuloValor(258, "RESPONSÁVEL", responsavel),
 
     // Bloco invertido da validade — lateral direita inteira, fundo preto,

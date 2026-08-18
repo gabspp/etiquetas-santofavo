@@ -20,6 +20,7 @@ export type ItemCatalogo = {
   dias_ambiente: number | null;
   dias_refrigerado: number | null;
   dias_congelado: number | null;
+  dias_apos_abertura: number | null;
 };
 
 export function produtoParaItemCatalogo(p: Product): ItemCatalogo {
@@ -31,6 +32,7 @@ export function produtoParaItemCatalogo(p: Product): ItemCatalogo {
     dias_ambiente: p.dias_ambiente,
     dias_refrigerado: p.dias_refrigerado,
     dias_congelado: p.dias_congelado,
+    dias_apos_abertura: p.dias_apos_abertura,
   };
 }
 
@@ -43,6 +45,7 @@ export function receitaParaItemCatalogo(r: Recipe): ItemCatalogo {
     dias_ambiente: r.dias_ambiente,
     dias_refrigerado: r.dias_refrigerado,
     dias_congelado: r.dias_congelado,
+    dias_apos_abertura: r.dias_apos_abertura,
   };
 }
 
