@@ -13,7 +13,12 @@ import {
   type ModoConservacao,
   type TipoEvento,
 } from "@/lib/validade/calcular-validade";
-import { gerarZPL, type EtiquetaSnapshot } from "@/lib/zpl/gerar-zpl";
+import {
+  comQuantidade,
+  gerarZPL,
+  type EtiquetaSnapshot,
+  type QuantidadeValores,
+} from "@/lib/zpl/gerar-zpl";
 import type { Database } from "@/types/database";
 import type { OrigemCatalogo } from "@/types/models";
 
@@ -97,6 +102,8 @@ export type RegistrarEtiquetaInput = {
   /** ISO 'YYYY-MM-DD' — null usa o prazo calculado; preenchido quando o
    * operador ajustou a validade manualmente na UI. */
   dataValidadeAjustada: string | null;
+  /** Impressa junto do nome — "AMENDOIM (1KG)" — ver comQuantidade. */
+  quantidade: QuantidadeValores;
   copias: number;
   responsavelId: string;
 };
@@ -170,7 +177,7 @@ export async function registrarEtiqueta(
 
   const tipoEvento: TipoEvento = input.aberto ? "abertura" : "manipulacao";
   const snapshot: EtiquetaSnapshot = {
-    produtoNome: nome,
+    produtoNome: comQuantidade(nome, input.quantidade),
     conservacao: MODO_LABEL[input.modo],
     tipoEvento: TIPO_EVENTO_LABEL[tipoEvento],
     dataEvento: input.dataEvento,
@@ -208,6 +215,8 @@ export type RegistrarEtiquetaLivreInput = {
   dataEvento: string;
   /** ISO 'YYYY-MM-DD' — sempre manual: não existe prazo cadastrado pra calcular. */
   dataValidade: string;
+  /** Impressa junto do nome — "AMENDOIM (1KG)" — ver comQuantidade. */
+  quantidade: QuantidadeValores;
   copias: number;
   responsavelId: string;
 };
@@ -239,7 +248,7 @@ export async function registrarEtiquetaLivre(
   }
 
   const snapshot: EtiquetaSnapshot = {
-    produtoNome: nome,
+    produtoNome: comQuantidade(nome, input.quantidade),
     conservacao,
     tipoEvento: TIPO_EVENTO_LABEL[input.tipoEvento],
     dataEvento: input.dataEvento,

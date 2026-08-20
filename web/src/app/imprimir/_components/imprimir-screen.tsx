@@ -15,12 +15,18 @@ import {
   TIPO_EVENTO_LABEL,
   type ModoConservacao,
 } from "@/lib/validade/calcular-validade";
-import { formatarDataBR, type EtiquetaSnapshot } from "@/lib/zpl/gerar-zpl";
+import {
+  comQuantidade,
+  formatarDataBR,
+  type EtiquetaSnapshot,
+  type QuantidadeValores,
+} from "@/lib/zpl/gerar-zpl";
 import { registrarEtiqueta, registrarEtiquetaLivre } from "../actions";
 import { ProductPicker } from "./product-picker";
 import { ConservacaoPicker } from "./conservacao-picker";
 import { AberturaToggle } from "./abertura-toggle";
 import { ItemLivreCampos, type ItemLivreValores } from "./item-livre-campos";
+import { QuantidadeCampo } from "./quantidade-campo";
 import { QtyStepper } from "./qty-stepper";
 import { ResponsavelPicker } from "@/components/responsavel-picker";
 import { LabelPreview } from "./label-preview";
@@ -35,6 +41,10 @@ function hojeISO(): string {
 
 function itemLivreVazio(): ItemLivreValores {
   return { nome: "", conservacao: "", aberto: false, dataEvento: hojeISO(), validade: "" };
+}
+
+function quantidadeVazia(): QuantidadeValores {
+  return { valor: "", unidade: "un" };
 }
 
 function Secao({ titulo, children }: { titulo: string; children: React.ReactNode }) {
@@ -56,6 +66,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
   const [item, setItem] = useState<ItemCatalogo | null>(null);
   const [livre, setLivre] = useState(false);
   const [livreValores, setLivreValores] = useState<ItemLivreValores>(itemLivreVazio);
+  const [quantidade, setQuantidade] = useState<QuantidadeValores>(quantidadeVazia);
 
   const [modo, setModo] = useState<ModoConservacao | null>(null);
   const [aberto, setAberto] = useState(false);
@@ -81,6 +92,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
     setAberto(false);
     setValidadeManual(null);
     setAjustandoDatas(false);
+    setQuantidade(quantidadeVazia());
     setErro(null);
     setSucesso(null);
   }
@@ -89,6 +101,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
     setItem(null);
     setLivre(true);
     setLivreValores(itemLivreVazio());
+    setQuantidade(quantidadeVazia());
     setErro(null);
     setSucesso(null);
   }
@@ -100,6 +113,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
     setAberto(false);
     setValidadeManual(null);
     setAjustandoDatas(false);
+    setQuantidade(quantidadeVazia());
     setErro(null);
   }
 
@@ -135,7 +149,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
         return null;
       }
       return {
-        produtoNome: livreValores.nome,
+        produtoNome: comQuantidade(livreValores.nome, quantidade),
         conservacao: livreValores.conservacao,
         tipoEvento: TIPO_EVENTO_LABEL[livreValores.aberto ? "abertura" : "manipulacao"],
         dataEvento: livreValores.dataEvento,
@@ -145,14 +159,14 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
     }
     if (!item || !modo || !validadeEfetiva) return null;
     return {
-      produtoNome: item.nome,
+      produtoNome: comQuantidade(item.nome, quantidade),
       conservacao: MODO_LABEL[modo],
       tipoEvento: TIPO_EVENTO_LABEL[aberto ? "abertura" : "manipulacao"],
       dataEvento,
       dataValidade: validadeEfetiva,
       responsavelNome: responsavel?.nome ?? "",
     };
-  }, [livre, livreValores, item, modo, aberto, validadeEfetiva, dataEvento, responsavel]);
+  }, [livre, livreValores, item, modo, aberto, validadeEfetiva, dataEvento, responsavel, quantidade]);
 
   const podeImprimir =
     !!previewSnapshot &&
@@ -177,6 +191,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
           tipoEvento: livreValores.aberto ? "abertura" : "manipulacao",
           dataEvento: livreValores.dataEvento,
           dataValidade: livreValores.validade,
+          quantidade,
           copias,
           responsavelId: responsavel.id,
         });
@@ -188,6 +203,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
           aberto,
           dataEvento,
           dataValidadeAjustada: validadeManual,
+          quantidade,
           copias,
           responsavelId: responsavel.id,
         });
@@ -207,6 +223,7 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
       setCopias(1);
       setValidadeManual(null);
       setAjustandoDatas(false);
+      setQuantidade(quantidadeVazia());
       setDataEvento(hojeISO());
       setLivreValores(itemLivreVazio());
     } catch (err) {
@@ -252,6 +269,10 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
                 {livre ? "Cancelar" : "Trocar"}
               </button>
             </div>
+
+            <Secao titulo="Quantidade (opcional)">
+              <QuantidadeCampo valores={quantidade} onChange={setQuantidade} />
+            </Secao>
 
             {livre ? (
               <ItemLivreCampos valores={livreValores} onChange={setLivreValores} />

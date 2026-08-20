@@ -3,6 +3,7 @@ import {
   FORMATO,
   FORMATO_50x30,
   FORMATO_60x40,
+  comQuantidade,
   conteudoLargura,
   gerarZPL,
   quebrarNome,
@@ -182,6 +183,25 @@ describe("quebrarNome", () => {
     expect(zpl).not.toMatch(/\^FB\d+,[2-9]/);
     const linhasNome = quebrarNome(longo.toUpperCase(), FORMATO_50x30);
     for (const linha of linhasNome) expect(zpl).toContain(`^FD${linha}^FS`);
+  });
+});
+
+describe("comQuantidade", () => {
+  it("junta valor e unidade entre parênteses", () => {
+    expect(comQuantidade("Amendoim", { valor: "1", unidade: "kg" })).toBe("Amendoim (1kg)");
+    expect(comQuantidade("Barrinha de Chocolate", { valor: "16", unidade: "un" })).toBe(
+      "Barrinha de Chocolate (16un)"
+    );
+  });
+
+  it("devolve o nome sem alteração quando o valor está vazio ou em branco", () => {
+    expect(comQuantidade("Amendoim", { valor: "", unidade: "kg" })).toBe("Amendoim");
+    expect(comQuantidade("Amendoim", { valor: "   ", unidade: "kg" })).toBe("Amendoim");
+    expect(comQuantidade("Amendoim", null)).toBe("Amendoim");
+  });
+
+  it("apara espaços em volta do valor digitado", () => {
+    expect(comQuantidade("Amendoim", { valor: " 500 ", unidade: "g" })).toBe("Amendoim (500g)");
   });
 });
 

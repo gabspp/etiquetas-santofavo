@@ -207,6 +207,27 @@ function zplEscape(texto: string): string {
   return texto.replace(/[\^~]/g, " ").replace(/[\r\n]/g, " ").trim();
 }
 
+export type UnidadeQuantidade = "un" | "g" | "kg";
+
+export type QuantidadeValores = {
+  /** Texto cru do campo — validado só na hora de imprimir (vazio = sem quantidade). */
+  valor: string;
+  unidade: UnidadeQuantidade;
+};
+
+/**
+ * Junta a quantidade ao nome do produto — "AMENDOIM (1KG)" — em vez de uma
+ * linha própria: a etiqueta de 50×30 já não tem espaço vertical sobrando
+ * (ver FORMATO_50x30), então a quantidade viaja dentro do texto do nome e
+ * passa pela mesma quebra/truncamento de quebrarNome sem precisar de
+ * nenhuma posição nova no layout.
+ */
+export function comQuantidade(nome: string, quantidade: QuantidadeValores | null): string {
+  const valor = quantidade?.valor.trim();
+  if (!valor) return nome;
+  return `${nome} (${valor}${quantidade!.unidade})`;
+}
+
 /** Exportado para o label-preview usar exatamente a mesma formatação do ZPL impresso. */
 export function formatarDataBR(isoDate: string): string {
   const [ano, mes, dia] = isoDate.split("-");
