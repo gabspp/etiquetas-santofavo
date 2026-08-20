@@ -23,6 +23,12 @@ Não precisa de QZ Tray: o agente fala direto com o spooler do Windows
    No `.env`: a anon key do Supabase (mesma do app), o email/senha da conta
    de tablet **desta** loja, e o nome exato da impressora que apareceu no
    `npm run listar`.
+
+   **Importante:** o agente só lê o `.env` uma vez, na hora que liga. Se
+   editar o `.env` (trocar de impressora, de conta, senha) com o agente já
+   rodando, ele continua usando o valor antigo até ser reiniciado — sem
+   avisar, sem erro, só imprimindo (ou não) com a config velha. Depois de
+   qualquer edição no `.env`: feche a janela do agente e abra de novo.
 4. Rodar:
    ```
    npm start
