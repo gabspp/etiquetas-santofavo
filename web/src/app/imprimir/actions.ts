@@ -29,13 +29,12 @@ async function exigirSessaoELoja(supabase: Cliente) {
 
   const { data: minhaLoja, error } = await supabase
     .from("usuarios_loja")
-    .select("loja_id, stores(code)")
+    .select("loja_id")
     .single();
   if (error || !minhaLoja) {
     throw new Error("Não foi possível identificar a loja deste tablet.");
   }
-  const lojaCodigo = (minhaLoja.stores as { code: string } | null)?.code ?? "?";
-  return { lojaId: minhaLoja.loja_id, lojaCodigo };
+  return { lojaId: minhaLoja.loja_id };
 }
 
 type DadosEtiqueta = {
@@ -111,7 +110,7 @@ export async function registrarEtiqueta(
   input: RegistrarEtiquetaInput
 ): Promise<RegistrarEtiquetaResultado> {
   const supabase = await createClient();
-  const { lojaId, lojaCodigo } = await exigirSessaoELoja(supabase);
+  const { lojaId } = await exigirSessaoELoja(supabase);
 
   // Item lido fresco no momento do insert — nunca confiar em dados vindos
   // do client, para o snapshot sempre refletir o cadastro real no instante
@@ -174,7 +173,6 @@ export async function registrarEtiqueta(
     produtoNome: nome,
     conservacao: MODO_LABEL[input.modo],
     tipoEvento: TIPO_EVENTO_LABEL[tipoEvento],
-    lojaCodigo,
     dataEvento: input.dataEvento,
     dataValidade: dataValidadeISO,
     responsavelNome: responsavel.nome,
@@ -218,7 +216,7 @@ export async function registrarEtiquetaLivre(
   input: RegistrarEtiquetaLivreInput
 ): Promise<RegistrarEtiquetaResultado> {
   const supabase = await createClient();
-  const { lojaId, lojaCodigo } = await exigirSessaoELoja(supabase);
+  const { lojaId } = await exigirSessaoELoja(supabase);
 
   const nome = input.nome.trim();
   const conservacao = input.conservacao.trim();
@@ -244,7 +242,6 @@ export async function registrarEtiquetaLivre(
     produtoNome: nome,
     conservacao,
     tipoEvento: TIPO_EVENTO_LABEL[input.tipoEvento],
-    lojaCodigo,
     dataEvento: input.dataEvento,
     dataValidade: input.dataValidade,
     responsavelNome: responsavel.nome,

@@ -14,7 +14,6 @@ const base: EtiquetaSnapshot = {
   produtoNome: "Ganache de Chocolate",
   conservacao: "Refrigerado 0–4 °C",
   tipoEvento: "Manipulação",
-  lojaCodigo: "26",
   dataEvento: "2026-03-05",
   dataValidade: "2026-03-12",
   responsavelNome: "Maria",

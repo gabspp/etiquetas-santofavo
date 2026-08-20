@@ -74,7 +74,7 @@ export function LabelPreview({ snapshot }: LabelPreviewProps) {
         className="absolute tracking-wider text-[#777] leading-none whitespace-nowrap"
         style={{ left: px(f.margem), top: py(f.header.y), fontSize: fonte(f.header.fonte) }}
       >
-        SANTO FAVO {snapshot.lojaCodigo}
+        SANTO FAVO
       </span>
 
       {/* Nome do produto — quebrado pela mesma função que o ZPL usa, uma

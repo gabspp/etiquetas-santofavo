@@ -138,7 +138,6 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
         produtoNome: livreValores.nome,
         conservacao: livreValores.conservacao,
         tipoEvento: TIPO_EVENTO_LABEL[livreValores.aberto ? "abertura" : "manipulacao"],
-        lojaCodigo,
         dataEvento: livreValores.dataEvento,
         dataValidade: livreValores.validade,
         responsavelNome: responsavel?.nome ?? "",
@@ -149,12 +148,11 @@ export function ImprimirScreen({ itens, responsaveis, lojaCodigo }: ImprimirScre
       produtoNome: item.nome,
       conservacao: MODO_LABEL[modo],
       tipoEvento: TIPO_EVENTO_LABEL[aberto ? "abertura" : "manipulacao"],
-      lojaCodigo,
       dataEvento,
       dataValidade: validadeEfetiva,
       responsavelNome: responsavel?.nome ?? "",
     };
-  }, [livre, livreValores, item, modo, aberto, validadeEfetiva, dataEvento, responsavel, lojaCodigo]);
+  }, [livre, livreValores, item, modo, aberto, validadeEfetiva, dataEvento, responsavel]);
 
   const podeImprimir =
     !!previewSnapshot &&

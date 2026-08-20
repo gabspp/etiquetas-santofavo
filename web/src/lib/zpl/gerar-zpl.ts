@@ -11,7 +11,6 @@ export type EtiquetaSnapshot = {
   /** Rótulo do evento que a data abaixo representa — "Manipulação" ou
    * "Abertura" (TIPO_EVENTO_LABEL). */
   tipoEvento: string;
-  lojaCodigo: string;
   /** ISO 'YYYY-MM-DD' — data do evento (manipulação ou abertura). */
   dataEvento: string;
   /** ISO 'YYYY-MM-DD' */
@@ -244,7 +243,7 @@ export function gerarZPL(
   const nome = zplEscape(snapshot.produtoNome.toUpperCase());
   const conservacao = zplEscape(snapshot.conservacao);
   const responsavel = zplEscape(snapshot.responsavelNome);
-  const lojaHeader = zplEscape(`SANTO FAVO ${snapshot.lojaCodigo}`);
+  const lojaHeader = "SANTO FAVO";
   const rotuloEvento = zplEscape(snapshot.tipoEvento.toUpperCase());
   const dataEventoFmt = formatarDataBR(snapshot.dataEvento);
   const { diaMes, ano } = splitDataValidade(snapshot.dataValidade);
