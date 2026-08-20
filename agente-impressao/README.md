@@ -45,3 +45,10 @@ sozinho quando o PC liga.
   conexão caiu ou se o PC estava desligado).
 - Cada item vira `pendente → impressa` (ou `erro`, com a mensagem gravada
   na própria linha da fila para diagnóstico).
+
+## Diagnóstico
+
+`node check-fila.mjs` mostra os últimos 5 itens da fila de impressão desta
+loja (status, erro, horários) — útil para conferir se um item enfileirado
+pelo app está sendo pego pelo agente sem precisar abrir o Supabase Studio.
+Usa o mesmo `.env` do agente.
