@@ -44,14 +44,17 @@ compartilhado de produção — ver `supabase/README.md`).
 ## Impressora (uma vez por loja)
 
 Ver `agente-impressao/README.md`: instalar o driver da impressora no Windows, preencher
-o `.env` do agente (conta da loja + nome da impressora) e deixar `npm start` rodando
-(há um `.bat` para iniciar junto com o Windows).
+o `.env` do agente (conta da loja + nome da impressora) e rodar o agente **como serviço
+do Windows via NSSM** (seção "Rodando como serviço do Windows" no README do agente) —
+o modo `npm start`/janela de console fica só para teste, é frágil em produção (janela
+pode ser fechada, processo não reinicia sozinho se cair).
 
 ## Status de verificação
 
 - Testado de verdade: fluxo completo no banco real (imprimir → fila → agente → status
   `impressa`/`erro`), isolamento RLS entre lojas, telas em viewport de celular e desktop,
-  15 testes unitários + lint + typecheck + build.
-- **Ainda não validado**: saída física na impressora térmica (nenhuma Zebra/Elgin neste
-  ambiente) — o layout ZPL (posições/densidade) pode precisar de ajuste fino na primeira
-  impressão real.
+  15 testes unitários + lint + typecheck + build, impressão física na Zebra da loja 26
+  (agente rodando como serviço NSSM, com restart automático testado).
+- **Ainda não validado**: agente/serviço na loja 248 (só a 26 tem o serviço NSSM
+  instalado até agora); layout ZPL pode precisar de ajuste fino conforme mais etiquetas
+  reais saem.
