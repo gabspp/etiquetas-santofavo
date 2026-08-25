@@ -47,36 +47,38 @@ loja 26 em 25/08/2026 (ver commit desta mudança).
 
 Solução: rodar como serviço do Windows via [NSSM](https://nssm.cc) — sem
 janela para fechar, sobe sozinho no boot mesmo sem login, e reinicia
-sozinho se cair.
+sozinho se cair (testado de verdade: matar o processo na mão, o serviço
+sobe outro em ~5s).
 
-Instalação (uma vez por loja, requer privilégio de administrador):
+### Instalar (ou reinstalar do zero)
 
-```powershell
-choco install nssm -y   # ou baixar de nssm.cc se não tiver chocolatey
+Dar dois cliques em **`instalar-servico.bat`** (nesta pasta). Ele pede
+permissão de administrador (UAC) e faz tudo sozinho: instala o NSSM via
+chocolatey se não tiver, configura o serviço, desativa o atalho antigo de
+`shell:startup` se existir (pra não rodar dois agentes em paralelo — ver
+"Bug real" acima) e inicia. **É idempotente** — rodar de novo a qualquer
+momento reconfigura do zero, sem quebrar nada. Use isso também para
+configurar o agente numa loja nova (ex.: loja 248): copiar esta pasta,
+preencher o `.env`, dar os dois cliques.
 
-$svc  = "SantoFavoAgenteImpressao"
-$dir  = "<caminho completo desta pasta agente-impressao>"
-$node = (Get-Command node).Source
+Precisa ter Node.js instalado e o `.env` já preenchido antes (passos 1-3
+acima).
 
-nssm install $svc $node agente.mjs
-nssm set $svc AppDirectory $dir
-nssm set $svc AppStdout (Join-Path $dir "service-stdout.log")
-nssm set $svc AppStderr (Join-Path $dir "service-stderr.log")
-nssm set $svc AppRotateFiles 1
-nssm set $svc AppRotateBytes 1048576
-nssm set $svc Start SERVICE_AUTO_START
-nssm set $svc AppExit Default Restart   # reinicia sozinho se o processo cair
-nssm set $svc AppRestartDelay 5000
-nssm start $svc
-```
+### No dia a dia — dois cliques, sem PowerShell
 
-Se antes você tinha configurado o atalho de `iniciar-agente.bat` em
-`shell:startup` (seção antiga abaixo), **desative-o** depois de instalar o
-serviço — os dois rodando ao mesmo tempo processam a mesma fila e podem
-imprimir a etiqueta duas vezes. Renomeie o `.lnk` para `.lnk.disabled` (não
-precisa apagar).
+- **`verificar-status.bat`** — mostra se o serviço está rodando e os
+  últimos itens da fila (equivalente a `nssm status` + `check-fila.mjs`
+  num só clique). Não precisa de admin.
+- **`reiniciar-agente.bat`** — reinicia o serviço. Pede UAC. Use depois de
+  editar o `.env`, ou sempre que `verificar-status.bat` mostrar algo
+  estranho (serviço parado, item preso em `pendente`).
 
-Diagnóstico do serviço:
+Dica: crie atalhos desses dois `.bat` na Área de Trabalho (arrastar com o
+botão direito → "Criar atalho aqui") para quem estiver na loja não precisar
+nem abrir esta pasta.
+
+### Comandos manuais (se preferir não usar os `.bat`)
+
 ```powershell
 nssm status SantoFavoAgenteImpressao     # deve dizer SERVICE_RUNNING
 nssm restart SantoFavoAgenteImpressao    # reinicia manualmente (ex.: depois de editar o .env)
@@ -84,7 +86,8 @@ type service-stdout.log                  # log de "logado como..." / "impressa <
 type service-stderr.log                  # erros do processo, se houver
 ```
 Assim como no modo console: se você editar o `.env`, precisa reiniciar o
-serviço (`nssm restart ...`) para ele pegar os novos valores.
+serviço (`reiniciar-agente.bat` ou `nssm restart ...`) para ele pegar os
+novos valores.
 
 ## Iniciar junto com o Windows (modo console — só se não usar o serviço acima)
 
@@ -109,4 +112,12 @@ serviço NSSM acima.
 `node check-fila.mjs` mostra os últimos 5 itens da fila de impressão desta
 loja (status, erro, horários) — útil para conferir se um item enfileirado
 pelo app está sendo pego pelo agente sem precisar abrir o Supabase Studio.
-Usa o mesmo `.env` do agente.
+Usa o mesmo `.env` do agente. (`verificar-status.bat` roda isso mesmo, com
+dois cliques.)
+
+Se o item mais recente aparecer `impressa` (sem `erro`) mas nada saiu da
+impressora de verdade: o agente fez a parte dele (mandou os bytes pro
+spooler do Windows com sucesso) — o problema está na impressora física
+(etiqueta/fita fora, USB solto, cabeça de impressão aberta), não no
+agente. `Get-Printer -Name "<nome>"` no PowerShell mostra o status e a
+fila de impressão do Windows (`Get-PrintJob`) se quiser confirmar.
