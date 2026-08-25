@@ -113,6 +113,28 @@ async function processarPendentes() {
       if (!itens?.length) return;
 
       const item = itens[0];
+
+      // Reivindica o item antes de imprimir: UPDATE condicional (só afeta
+      // a linha se ainda estiver "pendente") é atômico no Postgres — se
+      // outro agente pegar o mesmo item ao mesmo tempo, só um dos dois
+      // UPDATEs afeta a linha. Sem isso, dois agentes rodando por engano
+      // (ex.: um órfão de sessão antiga + o serviço) imprimem a mesma
+      // etiqueta duas vezes.
+      const { data: reivindicado, error: erroReivindicar } = await supabase
+        .from("fila_impressao")
+        .update({ status: "imprimindo" })
+        .eq("id", item.id)
+        .eq("status", "pendente")
+        .select("id");
+      if (erroReivindicar) {
+        console.error("[agente] erro reivindicando item:", erroReivindicar.message);
+        return;
+      }
+      if (!reivindicado?.length) {
+        console.log(`[agente] ${item.id} já foi pego por outro processo, pulando`);
+        continue;
+      }
+
       try {
         await imprimirZPL(item.zpl);
         await supabase
