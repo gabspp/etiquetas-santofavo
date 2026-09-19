@@ -121,3 +121,27 @@ spooler do Windows com sucesso) — o problema está na impressora física
 (etiqueta/fita fora, USB solto, cabeça de impressão aberta), não no
 agente. `Get-Printer -Name "<nome>"` no PowerShell mostra o status e a
 fila de impressão do Windows (`Get-PrintJob`) se quiser confirmar.
+
+### Etiquetas em branco / conteúdo cortado ou fora de posição
+
+Caso real de 19/09/2026 (loja 26): só o bloco preto da validade saía
+(com a borda falhada), o resto da etiqueta ficava em branco e sobravam
+várias etiquetas vazias depois de cada impressão. O software estava
+100% (agente rodando, fila `impressa`, spooler vazio, ZPL correto). A
+causa era **calibração do sensor de etiquetas** da Zebra fora de sincronia
+com o rolo — a impressora imprimia fora de posição e depois puxava
+etiquetas à procura do gap. **Solução: dois cliques em
+`calibrar-impressora.bat`** (atalho "Calibrar impressora" na Área de
+Trabalho): manda `~JC`, a impressora puxa umas etiquetas e para. Não
+precisa de admin.
+
+**Sempre que trocar o rolo** (o código alterna entre 50 × 30 e 60 × 40 —
+ver `FORMATO` em `web/src/lib/zpl/gerar-zpl.ts`), rode a calibração; e se o
+tamanho mudou, troque também o `FORMATO` no app.
+
+Para ver como a impressora está ajustada, mande `~WC` (imprime a etiqueta
+de configuração: método de impressão, sensor, escuridão, comprimento).
+Ajuste da loja 26 quando estava saudável: `THERMAL-TRANS`, `GAP/NOTCH`,
+sensor `TRANSMISSIVE`, escuridão +15, 4 ips, largura 400, comprimento 248.
+Uma linha branca fina em blocos pretos indica sujeira na cabeça ou dobra
+na fita — limpar a cabeça com álcool isopropílico.
