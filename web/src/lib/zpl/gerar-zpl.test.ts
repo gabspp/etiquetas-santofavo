@@ -138,8 +138,8 @@ describe("gerarZPL", () => {
     expect(zpl).not.toContain("^ESPECIAL");
     expect(zpl).not.toContain("ESPECIAL~");
     // e o nome sai em caixa alta, distribuído nas linhas do formato
-    expect(zpl).toContain("^FDTRUFA ESPECIAL DE^FS");
-    expect(zpl).toContain("^FDMARACUJÁ^FS");
+    expect(zpl).toContain("^FDTRUFA ESPECIAL^FS");
+    expect(zpl).toContain("^FDDE MARACUJÁ^FS");
   });
 });
 
@@ -181,7 +181,7 @@ describe("quebrarNome", () => {
     const zpl = gerarZPL({ ...base, produtoNome: longo });
     // ^FB com mais de 1 linha é justamente o que causava a sobreposição
     expect(zpl).not.toMatch(/\^FB\d+,[2-9]/);
-    const linhasNome = quebrarNome(longo.toUpperCase(), FORMATO_50x30);
+    const linhasNome = quebrarNome(longo.toUpperCase(), FORMATO);
     for (const linha of linhasNome) expect(zpl).toContain(`^FD${linha}^FS`);
   });
 });
@@ -206,11 +206,11 @@ describe("comQuantidade", () => {
 });
 
 describe("formatos de etiqueta", () => {
-  it("o formato em uso é o rolo de 50 × 30 mm", () => {
-    expect(FORMATO).toBe(FORMATO_50x30);
+  it("o formato em uso é o rolo de 60 × 40 mm", () => {
+    expect(FORMATO).toBe(FORMATO_60x40);
     const zpl = gerarZPL(base);
-    expect(zpl).toContain("^PW400");
-    expect(zpl).toContain("^LL240");
+    expect(zpl).toContain("^PW480");
+    expect(zpl).toContain("^LL320");
   });
 
   it("gera o ZPL no formato 60 × 40 quando o perfil é passado explicitamente", () => {

@@ -113,9 +113,11 @@ export function LabelPreview({ snapshot }: LabelPreviewProps) {
       />
       <Linha y={f.linhas.ys[2]} rotulo="RESPONSÁVEL" valor={snapshot.responsavelNome || "—"} />
 
-      {/* Bloco invertido da validade — lateral direita inteira */}
+      {/* Bloco da validade — lateral direita inteira, moldura fina (não
+          fundo sólido: na etiqueta de 60×40 com fita/ribbon, área sólida
+          grande rasgava a fita — ver gerar-zpl.ts) */}
       <div
-        className="absolute inset-y-0 bg-black text-white"
+        className="absolute inset-y-0 border-2 border-[#111] text-[#111]"
         style={{ left: px(BOX_X), width: px(f.boxLargura) }}
       >
         <span

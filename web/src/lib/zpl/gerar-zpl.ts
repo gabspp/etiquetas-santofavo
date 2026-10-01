@@ -125,7 +125,7 @@ export const FORMATO_50x30: FormatoEtiqueta = {
  * `FORMATO_60x40` quando o consumível de 60 × 40 mm voltar.
  * O preview na tela lê o mesmo perfil, então acompanha sozinho.
  */
-export const FORMATO: FormatoEtiqueta = FORMATO_50x30;
+export const FORMATO: FormatoEtiqueta = FORMATO_60x40;
 
 /** Faixa livre à esquerda do bloco de validade, descontadas as margens. */
 export function conteudoLargura(formato: FormatoEtiqueta): number {
@@ -245,7 +245,8 @@ export function splitDataValidade(isoDate: string): { diaMes: string; ano: strin
  *
  * O layout distribui o conteúdo pela altura inteira da etiqueta: cabeçalho
  * + nome no terço superior, três linhas rótulo/valor preenchendo o resto,
- * e o bloco invertido de validade tomando a lateral direita completa.
+ * e o bloco de validade (moldura fina, texto preto) tomando a lateral
+ * direita completa.
  * Abre com ^XA^SZ2 (mode-lock em ZPL II, em vez de confiar na
  * autodetecção de linguagem da impressora) e fecha com um único ^XZ.
  *
@@ -300,12 +301,15 @@ export function gerarZPL(
     ...linhaRotuloValor(linhas.ys[1], rotuloEvento, dataEventoFmt),
     ...linhaRotuloValor(linhas.ys[2], "RESPONSÁVEL", responsavel),
 
-    // Bloco invertido da validade — lateral direita inteira, fundo preto,
-    // texto branco: é o campo que precisa ser lido a três metros.
-    `^FO${boxX},0^GB${boxLargura},${formato.ll},${boxLargura},B,0^FS`,
-    `^FO${boxX},${validade.rotuloY}^A0N,${validade.rotuloFonte},${validade.rotuloFonte}^FB${boxLargura},1,0,C,0^FR^FDVALIDADE^FS`,
-    `^FO${boxX},${validade.diaMesY}^A0N,${validade.diaMesAltura},${validade.diaMesLargura}^FB${boxLargura},1,0,C,0^FR^FD${diaMes}^FS`,
-    `^FO${boxX},${validade.anoY}^A0N,${validade.anoAltura},${validade.anoLargura}^FB${boxLargura},1,0,C,0^FR^FD${ano}^FS`,
+    // Bloco da validade — lateral direita inteira, moldura fina (não mais
+    // fundo preto sólido: numa etiqueta de 60×40 com fita/ribbon, a área
+    // sólida grande rasgava a fita bem nessa faixa — ver histórico desta
+    // mudança). Texto preto grande no lugar de branco invertido, pra manter
+    // a leitura a três metros sem estressar a impressora.
+    `^FO${boxX},0^GB${boxLargura},${formato.ll},2,B,0^FS`,
+    `^FO${boxX},${validade.rotuloY}^A0N,${validade.rotuloFonte},${validade.rotuloFonte}^FB${boxLargura},1,0,C,0^FDVALIDADE^FS`,
+    `^FO${boxX},${validade.diaMesY}^A0N,${validade.diaMesAltura},${validade.diaMesLargura}^FB${boxLargura},1,0,C,0^FD${diaMes}^FS`,
+    `^FO${boxX},${validade.anoY}^A0N,${validade.anoAltura},${validade.anoLargura}^FB${boxLargura},1,0,C,0^FD${ano}^FS`,
 
     `^PQ${nCopias}`,
     "^XZ",
