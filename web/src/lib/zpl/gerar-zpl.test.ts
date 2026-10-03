@@ -6,6 +6,8 @@ import {
   comQuantidade,
   conteudoLargura,
   gerarZPL,
+  layoutNome,
+  linhasQueCabem,
   quebrarNome,
   type EtiquetaSnapshot,
   type FormatoEtiqueta,
@@ -82,7 +84,7 @@ describe("gerarZPL", () => {
     expect(gerarZPL(base)).toMatchSnapshot();
   });
 
-  it("gera o ZPL com nome de produto longo (quebra em 2 linhas)", () => {
+  it("gera o ZPL com nome de produto longo (reduz a fonte para caber inteiro)", () => {
     const snapshot: EtiquetaSnapshot = {
       ...base,
       produtoNome: "Ganache de chocolate meio amargo 70% com flor de sal artesanal",
@@ -181,7 +183,7 @@ describe("quebrarNome", () => {
     const zpl = gerarZPL({ ...base, produtoNome: longo });
     // ^FB com mais de 1 linha é justamente o que causava a sobreposição
     expect(zpl).not.toMatch(/\^FB\d+,[2-9]/);
-    const linhasNome = quebrarNome(longo.toUpperCase(), FORMATO);
+    const { linhas: linhasNome } = layoutNome(longo.toUpperCase(), FORMATO);
     for (const linha of linhasNome) expect(zpl).toContain(`^FD${linha}^FS`);
   });
 });
@@ -257,18 +259,63 @@ describe("formatos de etiqueta", () => {
     ["50x30", FORMATO_50x30],
     ["60x40", FORMATO_60x40],
   ])("%s: o nome do produto nunca passa do divisor", (_nome, formato) => {
-    const zpl = gerarZPL(
-      { ...base, produtoNome: "Ganache de chocolate meio amargo 70% com flor de sal artesanal" },
-      1,
-      formato
-    );
-    const ysDoNome = [...zpl.matchAll(/\^FO\d+,(\d+)\^A0N,(\d+)/g)]
-      .map(([, y, altura]) => [Number(y), Number(altura)] as const)
-      .filter(([, altura]) => altura === formato.produto.fonte);
+    const nome = "Ganache de chocolate meio amargo 70% com flor de sal artesanal";
+    const zpl = gerarZPL({ ...base, produtoNome: nome }, 1, formato);
+    const { fonte, linhas } = layoutNome(nome.toUpperCase(), formato);
 
-    expect(ysDoNome.length).toBeGreaterThan(0);
-    for (const [y, altura] of ysDoNome) {
+    // Linhas de nome: ^FB na coluna da margem, acima do divisor (os valores
+    // ficam abaixo dele, então não entram aqui).
+    const linhasNaZpl = [
+      ...zpl.matchAll(new RegExp(`\\^FO${formato.margem},(\\d+)\\^A0N,(\\d+),\\d+\\^FB`, "g")),
+    ]
+      .map(([, y, altura]) => [Number(y), Number(altura)] as const)
+      .filter(([y]) => y < formato.divisor.y);
+
+    expect(linhasNaZpl.length).toBe(linhas.length);
+    for (const [y, altura] of linhasNaZpl) {
+      expect(altura).toBe(fonte);
       expect(y + altura).toBeLessThanOrEqual(formato.divisor.y);
+    }
+  });
+
+  it("nome curto mantém o corpo preferido do formato", () => {
+    expect(layoutNome("BOLO DE CHOCOLATE", FORMATO_60x40).fonte).toBe(FORMATO_60x40.produto.fonte);
+  });
+
+  it("nome que não cabe no corpo preferido diminui a fonte e sai inteiro, sem reticências", () => {
+    const nome = "GANACHE DE CHOCOLATE MEIO AMARGO 70% COM FLOR DE SAL ARTESANAL";
+    const { fonte, linhas } = layoutNome(nome, FORMATO_60x40);
+
+    expect(fonte).toBeLessThan(FORMATO_60x40.produto.fonte);
+    expect(fonte).toBeGreaterThanOrEqual(FORMATO_60x40.produto.fonteMin);
+    expect(linhas.some((l) => l.endsWith("..."))).toBe(false);
+    // quebra só entre palavras: juntando as linhas de volta dá o nome original
+    expect(linhas.join(" ")).toBe(nome);
+  });
+
+  it("só corta com reticências quando nem o corpo mínimo cabe", () => {
+    const enorme =
+      "Ganache de chocolate meio amargo 70% com flor de sal artesanal e cacau 100% puro importado";
+    const { fonte, linhas } = layoutNome(enorme.toUpperCase(), FORMATO_60x40);
+
+    expect(fonte).toBe(FORMATO_60x40.produto.fonteMin);
+    expect(linhas.length).toBeLessThanOrEqual(linhasQueCabem(FORMATO_60x40, fonte));
+    expect(linhas.at(-1)?.endsWith("...")).toBe(true);
+  });
+
+  it.each([
+    ["50x30", FORMATO_50x30],
+    ["60x40", FORMATO_60x40],
+  ])("%s: o corpo escolhido nunca fica abaixo do mínimo nem acima do preferido", (_nome, formato) => {
+    for (const nome of [
+      "BOLO",
+      "GANACHE DE CHOCOLATE MEIO AMARGO 70% COM FLOR DE SAL ARTESANAL",
+      "Ganache de chocolate meio amargo 70% com flor de sal artesanal e cacau 100% puro importado",
+    ]) {
+      const { fonte, linhas } = layoutNome(nome.toUpperCase(), formato);
+      expect(fonte).toBeGreaterThanOrEqual(formato.produto.fonteMin);
+      expect(fonte).toBeLessThanOrEqual(formato.produto.fonte);
+      expect(linhas.length).toBeLessThanOrEqual(linhasQueCabem(formato, fonte));
     }
   });
 

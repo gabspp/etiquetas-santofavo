@@ -16,7 +16,7 @@ import {
   FORMATO,
   conteudoLargura,
   formatarDataBR,
-  quebrarNome,
+  layoutNome,
   splitDataValidade,
 } from "@/lib/zpl/gerar-zpl";
 
@@ -63,6 +63,10 @@ function Linha({ y, rotulo, valor }: { y: number; rotulo: string; valor: string 
 export function LabelPreview({ snapshot }: LabelPreviewProps) {
   const { diaMes, ano } = splitDataValidade(snapshot.dataValidade);
   const { validade } = f;
+  const { fonte: fonteNome, linhas: linhasNome } = layoutNome(
+    snapshot.produtoNome.toUpperCase(),
+    f
+  );
 
   return (
     <div
@@ -77,17 +81,18 @@ export function LabelPreview({ snapshot }: LabelPreviewProps) {
         SANTO FAVO
       </span>
 
-      {/* Nome do produto — quebrado pela mesma função que o ZPL usa, uma
-          linha posicionada por vez (inclui as reticências do truncamento) */}
-      {quebrarNome(snapshot.produtoNome.toUpperCase(), f).map((linha, i) => (
+      {/* Nome do produto — corpo e quebra vêm da mesma função que o ZPL usa
+          (reduz a fonte antes de cortar; inclui as reticências se mesmo assim
+          não couber), uma linha posicionada por vez */}
+      {linhasNome.map((linha, i) => (
         <span
           key={i}
           className="absolute font-bold uppercase text-[#111] leading-none whitespace-nowrap"
           style={{
             left: px(f.margem),
-            top: py(f.produto.y + i * (f.produto.fonte + f.produto.espacoLinhas)),
+            top: py(f.produto.y + i * (fonteNome + f.produto.espacoLinhas)),
             width: px(LARGURA_CONTEUDO),
-            fontSize: fonte(f.produto.fonte),
+            fontSize: fonte(fonteNome),
           }}
         >
           {linha}

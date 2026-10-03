@@ -41,7 +41,9 @@ export type FormatoEtiqueta = {
   /** Largura do bloco invertido da validade, encostado na direita. */
   boxLargura: number;
   header: { y: number; fonte: number };
-  produto: { y: number; fonte: number; maxLinhas: number; espacoLinhas: number };
+  /** `fonte` é o corpo preferido; `fonteMin` é o menor que o nome pode
+   * chegar pra caber inteiro antes de ser cortado com reticências. */
+  produto: { y: number; fonte: number; fonteMin: number; maxLinhas: number; espacoLinhas: number };
   divisor: { y: number };
   /** Os três pares rótulo/valor: conservação, evento (manipulação ou
    * abertura) e responsável. */
@@ -74,7 +76,7 @@ export const FORMATO_60x40: FormatoEtiqueta = {
   margem: 14,
   boxLargura: 156,
   header: { y: 10, fonte: 18 },
-  produto: { y: 34, fonte: 38, maxLinhas: 2, espacoLinhas: 2 },
+  produto: { y: 34, fonte: 38, fonteMin: 22, maxLinhas: 2, espacoLinhas: 2 },
   divisor: { y: 124 },
   linhas: { ys: [138, 198, 258], rotuloFonte: 16, valorFonte: 28, valorOffset: 19 },
   validade: {
@@ -105,7 +107,7 @@ export const FORMATO_50x30: FormatoEtiqueta = {
   margem: 12,
   boxLargura: 130,
   header: { y: 8, fonte: 14 },
-  produto: { y: 24, fonte: 26, maxLinhas: 2, espacoLinhas: 2 },
+  produto: { y: 24, fonte: 26, fonteMin: 20, maxLinhas: 2, espacoLinhas: 2 },
   divisor: { y: 86 },
   linhas: { ys: [94, 142, 190], rotuloFonte: 13, valorFonte: 20, valorOffset: 16 },
   validade: {
@@ -144,25 +146,24 @@ const LARGURA_CARACTERE = 0.55;
 /** Reticências em três pontos: a fonte da impressora não tem o glifo "…". */
 const RETICENCIAS = "...";
 
-/**
- * Quebra o nome do produto nas linhas que caibem na faixa de conteúdo,
- * truncando com reticências no que passar de `maxLinhas`.
- *
- * A quebra é feita aqui, e não pelo ^FB do ZPL, porque o ^FB não trunca de
- * forma confiável: numa ZD220 o texto que excede o número de linhas sai
- * *sobreposto* na última linha em vez de ser descartado, virando um borrão
- * preto ilegível. Impressão real confirmou o comportamento.
- *
- * Exportada para o preview quebrar exatamente igual — é o mesmo texto nas
- * mesmas linhas na tela e no papel.
- */
-export function quebrarNome(nome: string, formato: FormatoEtiqueta = FORMATO): string[] {
-  const { fonte, maxLinhas } = formato.produto;
-  const maxChars = Math.max(
-    1,
-    Math.floor(conteudoLargura(formato) / (fonte * LARGURA_CARACTERE))
-  );
+/** Caracteres que cabem numa linha de nome com esse corpo de fonte. */
+function maxCharsPara(formato: FormatoEtiqueta, fonte: number): number {
+  return Math.max(1, Math.floor(conteudoLargura(formato) / (fonte * LARGURA_CARACTERE)));
+}
 
+/**
+ * Quantas linhas de nome cabem na faixa vertical do produto (entre o topo do
+ * nome e o divisor) com esse corpo de fonte. Com o corpo preferido do 60 × 40
+ * isso dá 2, igual ao `maxLinhas` do perfil; com corpos menores cabem mais.
+ */
+export function linhasQueCabem(formato: FormatoEtiqueta, fonte: number): number {
+  const { y, espacoLinhas } = formato.produto;
+  const faixa = formato.divisor.y - y;
+  return Math.max(1, Math.floor((faixa - fonte) / (fonte + espacoLinhas)) + 1);
+}
+
+/** Quebra palavra a palavra, sem limite de linhas. Palavra maior que a linha é partida. */
+function quebrarSemTruncar(nome: string, maxChars: number): string[] {
   const linhas: string[] = [];
   let atual = "";
 
@@ -188,11 +189,13 @@ export function quebrarNome(nome: string, formato: FormatoEtiqueta = FORMATO): s
     }
   }
   fechar();
+  return linhas;
+}
 
+/** Corta nas `maxLinhas` disponíveis e marca com reticências, cabendo na última linha. */
+function truncar(linhas: string[], maxLinhas: number, maxChars: number): string[] {
   if (linhas.length <= maxLinhas) return linhas;
 
-  // Sobrou texto: corta nas linhas disponíveis e marca com reticências,
-  // abrindo espaço para elas dentro do limite da última linha.
   const mantidas = linhas.slice(0, maxLinhas);
   const ultima = mantidas[maxLinhas - 1];
   mantidas[maxLinhas - 1] =
@@ -200,6 +203,57 @@ export function quebrarNome(nome: string, formato: FormatoEtiqueta = FORMATO): s
       ? ultima + RETICENCIAS
       : ultima.slice(0, Math.max(0, maxChars - RETICENCIAS.length)).trimEnd() + RETICENCIAS;
   return mantidas;
+}
+
+/**
+ * Quebra o nome do produto no corpo preferido do formato, truncando com
+ * reticências no que passar de `maxLinhas`. Para o caso de nome grande, use
+ * `layoutNome`, que reduz o corpo antes de cortar.
+ *
+ * A quebra é feita aqui, e não pelo ^FB do ZPL, porque o ^FB não trunca de
+ * forma confiável: numa ZD220 o texto que excede o número de linhas sai
+ * *sobreposto* na última linha em vez de ser descartado, virando um borrão
+ * preto ilegível. Impressão real confirmou o comportamento.
+ */
+export function quebrarNome(nome: string, formato: FormatoEtiqueta = FORMATO): string[] {
+  const { fonte, maxLinhas } = formato.produto;
+  const maxChars = maxCharsPara(formato, fonte);
+  return truncar(quebrarSemTruncar(nome, maxChars), maxLinhas, maxChars);
+}
+
+/**
+ * Escolhe o maior corpo de fonte em que o nome inteiro cabe na faixa do
+ * produto, em passos de 2 dots, do corpo preferido até `fonteMin`. Só se nem
+ * no mínimo couber é que o nome é cortado com reticências.
+ *
+ * Exportada para o preview usar a mesma escolha — corpo e quebra iguais na
+ * tela e no papel.
+ */
+export function layoutNome(
+  nome: string,
+  formato: FormatoEtiqueta = FORMATO
+): { fonte: number; linhas: string[] } {
+  const { fonte: fontePreferida, fonteMin } = formato.produto;
+
+  const candidatos: number[] = [];
+  for (let f = fontePreferida; f > fonteMin; f -= 2) candidatos.push(f);
+  candidatos.push(fonteMin);
+
+  for (const fonte of candidatos) {
+    const linhas = quebrarSemTruncar(nome, maxCharsPara(formato, fonte));
+    if (linhas.length <= linhasQueCabem(formato, fonte)) return { fonte, linhas };
+  }
+
+  // Nem no corpo mínimo cabe inteiro: corta no mínimo.
+  const maxChars = maxCharsPara(formato, fonteMin);
+  return {
+    fonte: fonteMin,
+    linhas: truncar(
+      quebrarSemTruncar(nome, maxChars),
+      linhasQueCabem(formato, fonteMin),
+      maxChars
+    ),
+  };
 }
 
 /** ^ e ~ são caracteres de controle ZPL — nunca deixar dado dinâmico quebrar o formato. */
@@ -263,6 +317,7 @@ export function gerarZPL(
   const largura = conteudoLargura(formato);
 
   const nome = zplEscape(snapshot.produtoNome.toUpperCase());
+  const { fonte: fonteNome, linhas: linhasNome } = layoutNome(nome, formato);
   const conservacao = zplEscape(snapshot.conservacao);
   const responsavel = zplEscape(snapshot.responsavelNome);
   const lojaHeader = "SANTO FAVO";
@@ -288,9 +343,9 @@ export function gerarZPL(
     // ver quebrarNome: uma linha ^FO por linha de texto, nunca um ^FB
     // multilinha, para o excedente não sair sobreposto)
     `^FO${margem},${header.y}^A0N,${header.fonte},${header.fonte}^FD${lojaHeader}^FS`,
-    ...quebrarNome(nome, formato).map(
+    ...linhasNome.map(
       (linha, i) =>
-        `^FO${margem},${produto.y + i * (produto.fonte + produto.espacoLinhas)}^A0N,${produto.fonte},${produto.fonte}^FB${largura},1,0,L,0^FD${linha}^FS`
+        `^FO${margem},${produto.y + i * (fonteNome + produto.espacoLinhas)}^A0N,${fonteNome},${fonteNome}^FB${largura},1,0,L,0^FD${linha}^FS`
     ),
 
     // Linha divisória fina separando o nome dos dados
